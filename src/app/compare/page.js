@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { ArrowLeft } from "lucide-react";
 
-export default function ComparePage() {
+function CompareContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Get the IDs from the URL (e.g., ?ids=1,2)
   const ids = searchParams.get("ids");
 
   useEffect(() => {
@@ -23,7 +22,6 @@ export default function ComparePage() {
   }, [ids]);
 
   async function fetchComparedColleges(idArray) {
-    // Fetch only the specific colleges the user selected
     let { data, error } = await supabase
       .from("colleges")
       .select("*")
@@ -42,7 +40,7 @@ export default function ComparePage() {
       <div className="max-w-5xl mx-auto">
         <button 
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-8 font-medium"
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-8 font-medium transition"
         >
           <ArrowLeft size={20} /> Back to Search
         </button>
@@ -60,23 +58,23 @@ export default function ComparePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              <tr className="hover:bg-gray-50">
+              <tr className="hover:bg-gray-50 text-black">
                 <td className="p-4 font-medium text-gray-600">Location</td>
                 {colleges.map(c => <td key={c.id} className="p-4">{c.location}</td>)}
               </tr>
-              <tr className="hover:bg-gray-50">
+              <tr className="hover:bg-gray-50 text-black">
                 <td className="p-4 font-medium text-gray-600">Fees (per year)</td>
                 {colleges.map(c => <td key={c.id} className="p-4 text-red-600 font-medium">₹{c.fees.toLocaleString()}</td>)}
               </tr>
-              <tr className="hover:bg-gray-50">
+              <tr className="hover:bg-gray-50 text-black">
                 <td className="p-4 font-medium text-gray-600">Placement %</td>
                 {colleges.map(c => <td key={c.id} className="p-4 text-green-600 font-medium">{c.placement_rate}%</td>)}
               </tr>
-              <tr className="hover:bg-gray-50">
+              <tr className="hover:bg-gray-50 text-black">
                 <td className="p-4 font-medium text-gray-600">Rating</td>
                 {colleges.map(c => <td key={c.id} className="p-4 font-medium">{c.rating} / 5.0</td>)}
               </tr>
-              <tr className="hover:bg-gray-50">
+              <tr className="hover:bg-gray-50 text-black">
                 <td className="p-4 font-medium text-gray-600 align-top">Top Courses</td>
                 {colleges.map(c => (
                   <td key={c.id} className="p-4">
@@ -91,5 +89,14 @@ export default function ComparePage() {
         </div>
       </div>
     </main>
+  );
+}
+
+// THIS IS THE WRAPPER THAT FIXES THE VERCEL ERROR
+export default function ComparePage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-black">Loading Comparison Tool...</div>}>
+      <CompareContent />
+    </Suspense>
   );
 }
